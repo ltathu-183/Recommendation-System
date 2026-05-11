@@ -34,7 +34,7 @@ model:
   lgbm_params:
     objective: "lambdarank"
     metric: "ndcg"
-    ndcg_eval_at: [12]
+    eval_at: [12]
 
     learning_rate: 0.05
     num_leaves: 31

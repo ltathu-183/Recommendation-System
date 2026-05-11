@@ -17,7 +17,7 @@ import yaml
 from loguru import logger
 
 from rec_sys.model import ModelConfig, TwoStageLGBMRanker, load_data
-from rec_sys.data_utils import make_splits_lgbm as make_splits
+from rec_sys.data_utils import canonical_split
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,33 +35,47 @@ def main() -> None:
 
     cfg = ModelConfig(**raw.get("model", {}))
     cfg.data_dir = Path(raw.get("data", {}).get("data_dir", "data"))
+    cfg.model_dir = Path(raw.get("model", {}).get("model_dir", cfg.model_dir))
 
-    tx, customers, articles = load_data(cfg)
+    tx, customers, articles, int_to_customer = load_data(cfg)
 
-    train_full, val_tx, test_tx, val_gt, test_gt = make_splits(tx)
+    # canonical_split returns DataFrames with both 'customer_id' and 'customer_id_int'
+    train_full, val_tx, test_tx, val_gt, test_gt = canonical_split(tx)
 
-    model = TwoStageLGBMRanker(cfg)
-    model.fit(train_full)
+    # Free the original tx to reduce memory
+    del tx
 
-    prediction_date = test_tx["t_dat"].min()
+    # 🔥 DROP the heavy string column from the LARGE training DataFrame only
+    if 'customer_id' in train_full.columns:
+        train_full = train_full.drop(columns=['customer_id'])
 
-    score = model.evaluate(
-        test_gt=test_gt,
-        prediction_date=prediction_date,
+    # Now train_full only has compact integer IDs for training
+    model = TwoStageLGBMRanker(cfg, int_to_customer=int_to_customer)
+    model.fit(train_full, val_tx=val_tx, articles=articles)
+
+    val_score = model.evaluate(
+        test_gt=val_gt,
+        t=val_tx["t_dat"].min(),
         k=cfg.k,
     )
-    logger.info(f"Test MAP@{cfg.k} = {score:.6f}")
+    logger.info(f"Validation MAP@{cfg.k} = {val_score:.6f}")
 
-    output_path = Path(args.output)
+    test_score = model.evaluate(test_gt, test_tx["t_dat"].min(), cfg.k)
+    
+    logger.info(f"Test MAP@{cfg.k} = {test_score:.6f}")
+
+    # Save model (including mapping for later inference)
+    output_path = Path(args.output) if args.output else cfg.model_dir / "model.pkl"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     payload = {
         "lgbm_model": model.model,
         "cfg": model.cfg,
+        "int_to_customer": int_to_customer,
     }
     with open(output_path, "wb") as f:
         pickle.dump(payload, f)
-    logger.info(f"Saved model payload → {output_path} ({output_path.stat().st_size / 1e6:.1f} MB)")
+    logger.info(f"Saved model payload → {output_path}")
 
     try:
         logger.info("Extracting feature importance...")
@@ -88,7 +102,7 @@ def main() -> None:
 
         plt.barh(top_df["feature"], top_df["importance"])
         plt.gca().invert_yaxis()
-        plt.title(f"Top 20 Feature Importance - MAP: {score:.4f}")
+        plt.title(f"Top 20 Feature Importance - MAP: {test_score:.4f}")
         plt.xlabel("Importance Score")
         plt.ylabel("Features")
         plt.tight_layout()

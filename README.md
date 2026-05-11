@@ -268,7 +268,7 @@ Fits and evaluates all four baselines in sequence and prints a MAP@12 comparison
 GlobalPopularityRecommender      MAP@12 = 0.002938
 AgeSegmentedPopularity           MAP@12 = 0.003541
 RecentPopularityRecommender      MAP@12 = 0.006824
-RepurchaseRecommender            MAP@12 = 0.024112
+RepurchaseRecommender            MAP@12 = 0.022112
 ```
 
 ---
@@ -304,7 +304,7 @@ What happens step-by-step:
 Expected runtime: **~20–30 minutes** on a 16-core CPU.
 
 ```
-Test MAP@12 = 0.033412
+Validation MAP@12 = 0.023160
 Model saved → outputs/lgbm_model.pkl  (2.3 MB)
 ```
 

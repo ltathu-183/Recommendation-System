@@ -9,8 +9,6 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import pickle
 from pathlib import Path
-from rec_sys.model import TwoStageLGBMRanker
-import pandas as pd
 
 app = FastAPI(title="RecSys API", description="Fashion Recommendation API")
 

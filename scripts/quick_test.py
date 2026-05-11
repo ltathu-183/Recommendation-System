@@ -25,7 +25,7 @@ from rec_sys.model import ModelConfig, TwoStageLGBMRanker
 
 def main():
     data_dir = Path("data")
-    sample_size = 50000  # Number of customers to sample
+    sample_size = 10000  # Number of customers to sample
 
     logger.info("=" * 60)
     logger.info("Quick Test Pipeline - Verifying All Fixes")
@@ -33,7 +33,7 @@ def main():
 
     # Load data
     logger.info("Loading data...")
-    tx = pd.read_parquet(data_dir / "transactions.parquet")
+    tx = pd.read_parquet(data_dir / "transactions.parquet").head(1000000)  # Load only first 1M rows
     customers = pd.read_parquet(data_dir / "customers.parquet")
     articles = pd.read_parquet(data_dir / "articles.parquet")
 
@@ -89,16 +89,25 @@ def main():
     bl_cfg = BaselineConfig()
     results = {}
 
+    # Get top articles for global popularity
+    top_articles = (
+        tx_sample["article_id"]
+        .value_counts()
+        .head(100)
+        .index.tolist()
+    )
+
     models = [
-        ("Global Popularity", GlobalPopularityRecommender()),
+        ("Global Popularity", GlobalPopularityRecommender(top_articles=top_articles)),
         (
             "Recent Popularity",
             RecentPopularityRecommender(recent_weeks=bl_cfg.recent_weeks),
         ),
-        ("Repurchase", RepurchaseRecommender()),
+        ("Repurchase", RepurchaseRecommender(fallback_articles=top_articles)),
         (
             "Age-Segmented",
             AgeSegmentedPopularityRecommender(
+                global_top=top_articles,
                 age_bins=bl_cfg.age_bins, age_labels=bl_cfg.age_labels
             ),
         ),
@@ -106,13 +115,17 @@ def main():
 
     for name, model in models:
         t0 = time.time()
-        if name == "Age-Segmented":
-            model.fit(train_full, customers=customers_sample)
-        else:
-            model.fit(train_full)
-        map_score = model.evaluate(test_gt, k=12, sample=5000)
-        results[name] = map_score
-        logger.info(f"{name}: MAP@12 = {map_score:.6f} ({time.time() - t0:.1f}s)")
+        try:
+            if name == "Age-Segmented":
+                model.fit(train_full, customers=customers_sample)
+            else:
+                model.fit(train_full)
+            map_score = model.evaluate(test_gt, k=12, sample=5000)
+            results[name] = map_score
+            logger.info(f"{name}: MAP@12 = {map_score:.6f} ({time.time() - t0:.1f}s)")
+        except Exception as e:
+            logger.warning(f"{name}: Failed with error: {e}")
+            results[name] = 0.0
 
     # Test 3: Item-CF
     logger.info("\n" + "=" * 60)

@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "rec-sys-train",
-      cwd: "/home/vungocduong/rec_sys",
+      cwd: "/home/ltathu183/rec_sys",
       script: "uv",
       args: "run python scripts/train.py --config configs/default.yaml --output artifacts/two_stage_lgbm.pkl",
       autorestart: false,
@@ -12,7 +12,7 @@ module.exports = {
     },
     {
       name: "rec-sys-ensemble",
-      cwd: "/home/vungocduong/rec_sys",
+      cwd: "/home/ltathu183/rec_sys",
       script: "uv",
       args: "run python -m rec_sys.ensemble",
       autorestart: false,
@@ -22,7 +22,7 @@ module.exports = {
     },
     {
       name: "rec-sys-evaluate",
-      cwd: "/home/vungocduong/rec_sys",
+      cwd: "/home/ltathu183/rec_sys",
       script: "uv",
       args: "run python scripts/evaluate.py --config configs/default.yaml",
       autorestart: false,

@@ -5,7 +5,7 @@ description = "A modern Python project managed by uv."
 readme = "README.md"
 requires-python = ">= 3.12"
 authors = [
-    { name = "Vu Ngoc Duong", email = "vungocduong255@gmail.com" }
+    { name = "Le Thi Anh Thu", email = "ltathu183@gmail.com" }
 ]
 dependencies = [
     "dvc>=3.67.1",

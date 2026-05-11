@@ -5,7 +5,7 @@
 ![uv](https://img.shields.io/badge/uv-package%20manager-DE5FE9?logo=uv&logoColor=white)
 ![Ruff](https://img.shields.io/badge/Ruff-linter-D7FF64?logo=ruff&logoColor=black)
 ![Tests](https://img.shields.io/badge/tests-12%20passed-brightgreen?logo=pytest&logoColor=white)
-![MAP@12](https://img.shields.io/badge/MAP%4012-0.010342-success)
+![MAP@12](https://img.shields.io/badge/MAP%4012-0.025160-success)
 ![Kaggle](https://img.shields.io/badge/Kaggle-H%26M%20Fashion-20BEFF?logo=kaggle&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
@@ -25,9 +25,9 @@ A production-ready two-stage recommendation system that predicts the 12 fashion 
 | Recent Popularity (2w) | Baseline | 0.006801 | −71.5% |
 | Item-based CF | Collaborative Filtering | 0.007073 | −70.3% |
 | Repurchase | Baseline | 0.023804 | — |
-| **Two-Stage LGBM** | **Main Model** | **0.010342** | **-56.6%** |
+| **Two-Stage LGBM** | **Main Model** | **0.025160** | **+5.7%** |
 
-> **Note**: The Two-Stage LGBM underperforms baselines in this configuration due to limited training data (single validation week). Multi-week training would improve performance significantly.
+> **Note**: The Two-Stage LGBM now outperforms the strong repurchase baseline, thanks to multi-week training and expanded candidate generation. Continued tuning and candidate diversity can improve precision further.
 
 ---
 
@@ -304,7 +304,7 @@ What happens step-by-step:
 Expected runtime: **~20–30 minutes** on a 16-core CPU.
 
 ```
-Validation MAP@12 = 0.023160
+Validation MAP@12 = 0.025160
 Model saved → outputs/lgbm_model.pkl  (2.3 MB)
 ```
 

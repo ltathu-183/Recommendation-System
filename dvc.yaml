@@ -1,0 +1,38 @@
+stages:
+  train:
+    cmd: uv run python scripts/train.py
+    deps:
+    - configs/default.yaml
+    - data/articles.parquet
+    - data/customers.parquet
+    - data/transactions.parquet
+    outs:
+    - figures/feature_importance.png
+    - outputs/model.pkl
+  evaluate:
+    cmd: uv run python scripts/evaluate.py
+    deps:
+    - configs/default.yaml
+    - data/articles.parquet
+    - data/customers.parquet
+    - data/transactions.parquet
+    - outputs/model.pkl
+    outs:
+    - outputs/evaluation_results.json
+  create_results:
+    cmd: uv run python notebooks/create_results.py
+    deps:
+    - data/articles.parquet
+    - data/customers.parquet
+    - data/transactions.parquet
+    - outputs/model.pkl
+    outs:
+    - notebooks/results.ipynb
+  create_eda:
+    cmd: uv run python notebooks/create_eda.py
+    deps:
+    - data/articles.parquet
+    - data/customers.parquet
+    - data/transactions.parquet
+    outs:
+    - notebooks/eda.ipynb
